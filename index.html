@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="お好み焼き かわせ（静岡県浜松市中央区）のお献立・定休日・アクセス">
+<title>お好み焼き かわせ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<style>
+/* Layout: one warm single-column page — hero (dish + photo), 3-column menu, access band; phone gets a floating action bar. Single light look from the Organic system. */
+:root{
+  --bg:#f5ead8; --surface:#ebddc5; --text:#201e1d; --ground:#eee7db;
+  --n700:#645c50; --n800:#474238; --n900:#2e2b25;
+  --accent:#c67139; --a100:#fff2eb; --a200:#ffe1d0; --a600:#b2622d; --a700:#8c491a; --a800:#643312; --a900:#402310;
+  --g200:#e1eecc; --g900:#272e1b;
+  --ice:#e2f0f6; --ice-ink:#1f4b5f; --ice-tag:#c9e3ee;
+  --divider:rgba(32,30,29,.16);
+  --font-heading:"Caprasimo","Zen Maru Gothic",system-ui,sans-serif;
+  --font-body:"Figtree","Zen Maru Gothic","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --radius-lg:28px;
+  --shadow-md:0 3px 10px rgba(46,43,37,.16);
+  --shadow-lg:0 12px 32px rgba(46,43,37,.22);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;line-height:1.6}
+a{color:var(--a700)} a:hover{color:var(--a900)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+img{display:block;max-width:100%}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (min-width:900px){.wrap{padding-left:max(56px,env(safe-area-inset-left,0px));padding-right:max(56px,env(safe-area-inset-right,0px))}}
+.h{font-family:var(--font-heading);font-weight:400;margin:0;text-wrap:balance}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 18px;border-radius:999px;border:1px solid transparent;font-family:var(--font-body);font-weight:700;font-size:15px;letter-spacing:.03em;line-height:1.2;text-decoration:none;color:var(--text);background:transparent;cursor:pointer}
+.btn-primary{background:var(--a700);color:#fff} .btn-primary:hover{background:var(--a800);color:#fff}
+.btn-secondary{border-color:rgba(32,30,29,.35);color:var(--text)} .btn-secondary:hover{background:rgba(32,30,29,.07);color:var(--text)}
+.btn-tel{background:var(--a700);color:#fff;font-size:16px;letter-spacing:.04em;font-variant-numeric:tabular-nums;padding-inline:20px}
+.btn-tel:hover{background:var(--a800);color:#fff}
+.tag{display:inline-flex;align-items:center;font-size:12px;letter-spacing:.02em;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.tag-accent{background:var(--a100);color:var(--a800)}
+.tag-outline{border:1px solid var(--a600);color:var(--a700)}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:16px;flex-wrap:wrap}
+.brand{font-family:var(--font-heading);font-size:clamp(22px,3vw,28px);text-decoration:none;color:var(--text)}
+.nav-links{display:flex;gap:28px;align-items:center;font-weight:600}
+.nav-links a:not(.btn){color:var(--text);text-decoration:none}
+.nav-links a:not(.btn):hover{color:var(--accent)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:48px;align-items:center;padding-block:32px 24px}
+.hero-copy{display:flex;flex-direction:column;gap:18px;min-width:0}
+.hero-copy{container-type:inline-size}
+/* 見出しの文字サイズ: 72px が最大。欄が狭いときは欄の幅に合わせて小さくなる（19cqi = 欄の幅の19%） */
+.hero h1{font-size:min(72px,19cqi);line-height:1.05}
+.hero h1 .line{white-space:nowrap}
+/* 欄の幅に合わせて小さくする文字（render.js の fitText）: 行の途中で折り返さない */
+.fit .line,.menu .card > h3.fit,.fit .name,.notes li.fit{white-space:nowrap}
+.row.fit .name{min-width:auto}
+/* いちばん小さくしても入らないときだけ折り返す */
+.fit-wrap .line,.menu .card > h3.fit-wrap,.fit-wrap .name,.notes li.fit-wrap{white-space:normal}
+.row.fit-wrap .name{min-width:0}
+.hero p{margin:0;font-size:18px;line-height:1.7;max-width:32em;color:var(--n800)}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.photo{aspect-ratio:460/420;width:100%;max-width:100%;overflow:hidden}
+.fade{-webkit-mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent),linear-gradient(to bottom,transparent,#000 14%,#000 86%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent),linear-gradient(to bottom,transparent,#000 14%,#000 86%,transparent);mask-composite:intersect}
+.photo img{width:100%;height:100%;object-fit:cover}
+
+/* menu */
+.menu-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:32px 8px;scroll-margin-top:80px}
+.menu-head h2{font-size:40px}
+.menu-head span{color:var(--n700);font-size:14px}
+.menu{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;align-items:start;padding-block:16px}
+.card{background:var(--surface);border-radius:32px;padding:28px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card h3{font-family:var(--font-heading);font-weight:400;font-size:24px;margin:0 0 10px;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:2px}
+.row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--divider);font-variant-numeric:tabular-nums}
+.row:last-child{border-bottom:0}
+.row .name{flex:1;min-width:0}
+.row b{white-space:nowrap}
+.row.star .name{font-weight:700;color:var(--a900)}
+.side{display:flex;flex-direction:column;gap:20px;min-width:0}
+.double{background:var(--g200)}
+.double h3{color:var(--g900);font-size:22px}
+.menu .card{padding:24px}
+.menu .card h3{font-size:21px;word-break:keep-all}
+.notes{list-style:none;margin:0;padding:4px 8px;display:flex;flex-direction:column;gap:10px;font-size:15px;color:var(--n800)}
+.notes li::before{content:"・"}
+.ice{background:var(--ice)}
+.ice-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ice-title{display:flex;align-items:center;gap:8px}
+.kori-flag{flex:none;display:block}
+.ice-head h3{margin:0;color:var(--ice-ink);font-size:22px}
+.tag-ice{background:var(--ice-tag);color:var(--ice-ink)}
+.ice .row{border-bottom-color:rgba(31,75,95,.18)}
+.ice-note{margin:10px 0 0;font-size:13px;line-height:1.6;color:var(--ice-ink)}
+
+/* access */
+.access{margin-block:40px 56px;padding:32px 40px;background:var(--a200);border-radius:999px 48px 48px 999px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;scroll-margin-top:80px}
+.access .h{font-size:26px}
+.access .meta{color:var(--a900)}
+.actions{display:flex;gap:12px;flex-wrap:wrap}
+.tel{user-select:all;font-variant-numeric:tabular-nums}
+
+footer{padding-block:24px 40px;color:var(--n700);font-size:13px}
+
+/* shop intro */
+.intro{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:24px 16px}
+.intro-photo{margin:0;overflow:hidden;aspect-ratio:1208/820;max-width:100%}
+.intro-photo img{width:100%;height:100%;object-fit:cover}
+.intro-copy{display:flex;flex-direction:column;gap:14px;min-width:0}
+.intro-copy .h{font-size:clamp(30px,4vw,40px);line-height:1.15}
+.intro-copy p{margin:0;font-size:17px;line-height:1.8;color:var(--n800);max-width:30em}
+.divider{height:1px;background:var(--divider);margin-block:16px 8px}
+
+/* phone bar */
+.mbar{display:none}
+
+@media (max-width:960px){
+  .menu{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media (max-width:760px){
+  .nav-links{display:none}
+  .intro{grid-template-columns:1fr;gap:18px;padding-block:8px 8px}
+  .intro-copy p{font-size:16px}
+  .hero{grid-template-columns:1fr;gap:20px;padding-block:8px 16px}
+  .photo{order:-1;aspect-ratio:4/3}
+  .hero h1{font-size:min(44px,19cqi)}
+  .hero p{font-size:16px}
+  .menu-head h2{font-size:32px}
+  .menu{grid-template-columns:1fr}
+  .card{padding:20px 22px;border-radius:28px}
+  .access{grid-template-columns:1fr;border-radius:32px;padding:24px}
+  .access .h{font-size:22px}
+  body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .mbar{display:grid;position:fixed;z-index:30;left:calc(14px + env(safe-area-inset-left,0px));right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));grid-template-columns:1fr 1fr 1.3fr;gap:8px;padding:8px;background:var(--text);border-radius:999px;box-shadow:var(--shadow-md)}
+  .mbar .btn-ghost{color:var(--bg)}
+  .mbar .btn-ghost:hover{background:rgba(245,234,216,.12);color:var(--bg)}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<!-- 文章・値段・写真などの内容は content.js で編集します。このファイルは「枠」だけです。 -->
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" id="brand" href="#top"></a>
+    <nav class="nav-links" aria-label="メインメニュー">
+      <a href="#menu">お献立</a>
+      <a href="#access">店舗・アクセス</a>
+      <a class="btn btn-tel tel" data-tel data-tel-text href="#"></a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="wrap intro" aria-labelledby="intro-title">
+    <figure class="intro-photo fade"><img id="intro-photo" src="" alt=""></figure>
+    <div class="intro-copy">
+      <span class="tag tag-accent" id="intro-tag" style="align-self:flex-start"></span>
+      <h2 class="h" id="intro-title"></h2>
+      <p id="intro-text"></p>
+    </div>
+  </section>
+  <div class="wrap"><div class="divider"></div></div>
+
+  <section class="wrap hero">
+    <div class="hero-copy">
+      <span class="tag tag-accent" id="hero-tag" style="align-self:flex-start"></span>
+      <h1 class="h" id="hero-title"></h1>
+      <p id="hero-text"></p>
+      <div class="chips" id="hero-chips"></div>
+    </div>
+    <div class="photo fade"><img id="hero-photo" src="" alt=""></div>
+  </section>
+
+  <div class="wrap">
+    <div class="menu-head" id="menu">
+      <h2 class="h" id="menu-title"></h2>
+      <span id="menu-note"></span>
+    </div>
+  </div>
+
+  <section class="wrap menu" id="menu-list" aria-label="お献立"></section>
+
+  <div class="wrap">
+    <section class="access" id="access" aria-label="店舗・アクセス">
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span class="h" id="access-holiday"></span>
+        <span class="meta" id="access-address"></span>
+        <span class="meta">電話 <span class="tel" data-tel-text></span></span>
+      </div>
+      <div class="actions">
+        <a class="btn btn-secondary" data-map href="#" target="_blank" rel="noopener">Googleマップで見る</a>
+        <a class="btn btn-primary" data-tel href="#">電話する</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="wrap" id="footer"></footer>
+
+<nav class="mbar" aria-label="クイックアクセス">
+  <a class="btn btn-ghost" data-tel href="#">電話</a>
+  <a class="btn btn-ghost" data-map href="#" target="_blank" rel="noopener">地図</a>
+  <a class="btn btn-primary" href="#menu">お献立</a>
+</nav>
+
+<!-- かき氷の「氷」のれんの絵 -->
+<template id="kori-flag-template"><svg class="kori-flag" viewBox="0 0 40 50" width="34" height="42" role="img" aria-label="氷ののれん"><rect x="1" y="1" width="38" height="3" rx="1.5" fill="#7a5a3c"/><path d="M5 4h30v40l-5-3-5 3-5-3-5 3-5-3-5 3z" fill="#fff" stroke="#bcd0da" stroke-width=".8"/><path d="M5 4h30v3H5z" fill="#d42f3f"/><path d="M5 32c3-3 6-3 7.5 0s4.5 3 7.5 0 6-3 7.5 0 4.5 3 7.5 0v12l-5-3-5 3-5-3-5 3-5-3-5 3z" fill="#2f69b0"/><path d="M5 36c3-2.5 6-2.5 7.5 0s4.5 2.5 7.5 0 6-2.5 7.5 0 4.5 2.5 7.5 0" fill="none" stroke="#fff" stroke-width="1.1" opacity=".85"/><text x="20" y="26" text-anchor="middle" font-family="'Zen Maru Gothic','Hiragino Mincho ProN','Yu Mincho',serif" font-weight="700" font-size="17" fill="#d42f3f">氷</text></svg></template>
+
+<noscript><p style="padding:16px">このページを表示するには JavaScript を有効にしてください。</p></noscript>
+<script src="content.js"></script>
+<script src="render.js"></script>
+</body>
+</html>
