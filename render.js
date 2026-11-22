@@ -35,7 +35,7 @@
   }
   function rows(items) {
     return (items || []).map(function (it) {
-      return '<div class="row' + (it.popular ? " star" : "") + '">' +
+      return '<div class="row' + (it.popular ? " star" + (d.popularTwoLines !== false ? " two-line" : "") : "") + '">' +
         '<span class="name">' + esc(it.name) + "</span>" +
         (it.popular ? '<span class="tag tag-accent">人気</span>' : "") +
         "<b>" + yen(it.price) + "</b></div>";
@@ -90,9 +90,17 @@
   set("hero-chips", (h.chips || []).map(function (c) {
     return '<span class="tag tag-outline">' + esc(c) + "</span>";
   }).join(""));
+  // 値段の札を出さない設定（showChips: false）のときは、札の欄ごと隠す
+  var chipsEl = document.getElementById("hero-chips");
+  if (chipsEl) chipsEl.style.display = (h.showChips === false || !(h.chips || []).length) ? "none" : "";
   attr("#hero-photo", "src", h.photo);
   attr("#hero-photo", "alt", h.photoAlt || "");
   brightness("#hero-photo", h.photoBrightness);
+  // 写真の幅（ページの幅に対する %）。ページを広げると写真も大きくなる
+  var heroEl = document.querySelector(".hero");
+  if (heroEl && typeof h.photoWidth === "number") {
+    heroEl.style.setProperty("--hero-photo-width", h.photoWidth + "%");
+  }
 
   // ---- お献立 ----
   set("menu-title", esc(d.menuTitle));
@@ -112,11 +120,19 @@
   set("menu-list",
     card(d.okonomiyaki) +
     card(d.yakisoba) +
-    '<div class="side">' + card(d.double, "double") +
-      '<ul class="notes">' + (d.notes || []).map(function (n) {
-        return "<li>" + rich(n) + "</li>";
-      }).join("") + "</ul></div>" +
+    '<div class="side">' + card(d.double, "double") + "</div>" +
     ice);
+
+  // ---- お献立の下の注意書き ----
+  set("menu-notes", (d.notes || []).map(function (n) {
+    return "<li>" + esc(d.notesMark || "") + rich(n) + "</li>";
+  }).join(""));
+  var notesEl = document.getElementById("menu-notes");
+  if (notesEl) {
+    notesEl.classList.toggle("notes-column", d.notesInRow === false);
+    if (typeof d.notesGap === "number") notesEl.style.columnGap = d.notesGap + "px";
+    notesEl.style.display = (d.notes || []).length ? "" : "none";
+  }
 
   // ---- 店舗・アクセス ----
   set("access-holiday", esc(s.holiday));
@@ -126,22 +142,71 @@
   // 対象: お店紹介の見出し・文章、看板メニューの文章、お献立の見出し・品名と値段・注意書き
   // いちばん小さくて textMinSize（content.js）まで。それでも入らないときだけ折り返す。
   var MIN = typeof d.textMinSize === "number" ? d.textMinSize : 12;
-  var fitTargets = "#intro-title, #intro-text, #hero-text, .menu .card > h3, .menu .row, .notes li";
+  var fitTargets = "#intro-title, #hero-title, #intro-text, #hero-text, .menu .card > h3, .menu .row, .notes li";
   document.querySelectorAll(fitTargets).forEach(function (el) {
     el.classList.add("fit");
   });
 
+  // 1つの要素の文字を、欄に入る大きさまで小さくする（startSize を渡すとその大きさから始める）
+  function fitOne(el, startSize) {
+    el.style.fontSize = startSize ? startSize + "px" : "";
+    el.classList.remove("fit-wrap");
+    var size = parseFloat(getComputedStyle(el).fontSize);
+    for (var n = 0; n < 4 && el.scrollWidth > el.clientWidth + 0.5; n++) {
+      size = Math.max(MIN, size * el.clientWidth / el.scrollWidth);
+      el.style.fontSize = size + "px";
+      if (size === MIN) break;
+    }
+    if (el.scrollWidth > el.clientWidth + 0.5) el.classList.add("fit-wrap");
+  }
+
+  // メニューと同じ文字の大きさにするもの（sameSizeAsMenu）
+  var sameTags = ["#intro-tag", "#hero-tag"];   // お店紹介・看板メニューの札
+  var sameTexts = ["#intro-text", "#hero-text"]; // お店紹介・看板メニューの文章
+
   function fitText() {
+    // 1) お献立の行を先に合わせる
+    var menuRows = document.querySelectorAll(".menu .row.fit");
+    menuRows.forEach(function (el) { fitOne(el); });
+
+    // お献立の行の文字の大きさを、いちばん小さい行に合わせてそろえる（menuSameSize）
+    var smallest = Infinity;
+    menuRows.forEach(function (el) {
+      smallest = Math.min(smallest, parseFloat(getComputedStyle(el).fontSize));
+    });
+    if (d.menuSameSize !== false && smallest !== Infinity) {
+      menuRows.forEach(function (el) {
+        el.style.fontSize = smallest + "px";
+      });
+    }
+    var menuSize = smallest !== Infinity ? smallest : null;
+    var same = d.sameSizeAsMenu !== false && menuSize;
+
+    // 2) 札をメニューと同じ大きさにする
+    sameTags.forEach(function (sel) {
+      var el = document.querySelector(sel);
+      if (el) el.style.fontSize = same ? menuSize + "px" : "";
+    });
+
+    // 3) お店紹介の見出しを合わせ、看板メニューの見出しをそれと同じ大きさにする（headingSameSize）
+    var introTitle = document.getElementById("intro-title");
+    var heroTitle = document.getElementById("hero-title");
+    var headingSize = null;
+    if (introTitle) {
+      fitOne(introTitle);
+      headingSize = parseFloat(getComputedStyle(introTitle).fontSize);
+    }
+    if (heroTitle) {
+      var sameHeading = d.headingSameSize !== false && headingSize;
+      heroTitle.style.lineHeight = sameHeading && introTitle ? getComputedStyle(introTitle).lineHeight : "";
+      fitOne(heroTitle, sameHeading ? headingSize : null);
+    }
+
+    // 4) 残りの文字を合わせる（紹介文はメニューと同じ大きさから始める）
     document.querySelectorAll(".fit").forEach(function (el) {
-      el.style.fontSize = "";
-      el.classList.remove("fit-wrap");
-      var size = parseFloat(getComputedStyle(el).fontSize);
-      for (var n = 0; n < 4 && el.scrollWidth > el.clientWidth + 0.5; n++) {
-        size = Math.max(MIN, size * el.clientWidth / el.scrollWidth);
-        el.style.fontSize = size + "px";
-        if (size === MIN) break;
-      }
-      if (el.scrollWidth > el.clientWidth + 0.5) el.classList.add("fit-wrap");
+      if (el.matches(".menu .row") || el === introTitle || el === heroTitle) return;
+      var isSameText = sameTexts.some(function (sel) { return el.matches(sel); });
+      fitOne(el, isSameText && same ? menuSize : null);
     });
   }
 

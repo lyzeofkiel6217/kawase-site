@@ -51,7 +51,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .nav-links a:not(.btn):hover{color:var(--accent)}
 
 /* hero */
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:48px;align-items:center;padding-block:32px 24px}
+/* お好み焼き写真の幅は content.js の hero.photoWidth（ページ幅に対する %）で決まる */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,var(--hero-photo-width,45%));gap:48px;align-items:center;padding-block:32px 24px}
 .hero-copy{display:flex;flex-direction:column;gap:18px;min-width:0}
 .hero-copy{container-type:inline-size}
 /* 見出しの文字サイズ: 72px が最大。欄が狭いときは欄の幅に合わせて小さくなる（19cqi = 欄の幅の19%） */
@@ -81,13 +82,20 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .row .name{flex:1;min-width:0}
 .row b{white-space:nowrap}
 .row.star .name{font-weight:700;color:var(--a900)}
+/* 人気メニュー（デラックス）を2段にする：1段目に品名、2段目に「人気」と値段 */
+.row.star.two-line{flex-wrap:wrap;row-gap:4px}
+.row.star.two-line .name{flex:0 0 100%}
+.row.star.two-line b{margin-left:auto}
 .side{display:flex;flex-direction:column;gap:20px;min-width:0}
 .double{background:var(--g200)}
 .double h3{color:var(--g900);font-size:22px}
 .menu .card{padding:24px}
 .menu .card h3{font-size:21px;word-break:keep-all}
 .notes{list-style:none;margin:0;padding:4px 8px;display:flex;flex-direction:column;gap:10px;font-size:15px;color:var(--n800)}
-.notes li::before{content:"・"}
+/* 注意書きの文頭の記号は content.js の notesMark で付ける */
+/* お献立の下に置く注意書き：横に並べる（幅が足りないときは次の行へ）。背景なし */
+.notes-below{flex-direction:row;flex-wrap:wrap;column-gap:40px;row-gap:10px;padding:8px 0 0}
+.notes-below.notes-column{flex-direction:column}
 .ice{background:var(--ice)}
 .ice-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .ice-title{display:flex;align-items:center;gap:8px}
@@ -185,6 +193,8 @@ footer{padding-block:24px 40px;color:var(--n700);font-size:13px}
   </div>
 
   <section class="wrap menu" id="menu-list" aria-label="お献立"></section>
+  <!-- お献立の下の注意書き（内容は content.js の notes） -->
+  <div class="wrap"><ul class="notes notes-below" id="menu-notes"></ul></div>
 
   <div class="wrap">
     <section class="access" id="access" aria-label="店舗・アクセス">
