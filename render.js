@@ -24,8 +24,14 @@
       return '<span class="line">' + rich(line) + "</span>";
     }).join("<br>");
   }
+  // メニューの見出し：空白（全角・半角）で区切った言葉ごとに下線を引き、空白の部分には引かない
   function title(s) {
-    return esc(s).replace(/・/g, "・<wbr>");
+    var parts = String(s == null ? "" : s).split(/([ 　]+)/);
+    return parts.map(function (p) {
+      if (!p) return "";
+      if (/^[ 　]+$/.test(p)) return esc(p) + "<wbr>";
+      return '<span class="word">' + esc(p).replace(/・/g, "・<wbr>") + "</span>";
+    }).join("");
   }
   function yen(n) {
     return typeof n === "number" ? "¥" + n.toLocaleString("ja-JP") : esc(n);
@@ -35,16 +41,44 @@
   }
   function rows(items) {
     return (items || []).map(function (it) {
-      return '<div class="row' + (it.popular ? " star" + (d.popularTwoLines !== false ? " two-line" : "") : "") + '">' +
+      var popularClass = "";
+      if (it.popular) {
+        popularClass = " star";
+        if (d.popularTwoLines !== false) {
+          popularClass += " two-line" + (d.popularPriceCenter !== false ? " price-center" : "");
+        }
+      }
+      return '<div class="row' + popularClass + '">' +
         '<span class="name">' + esc(it.name) + "</span>" +
         (it.popular ? '<span class="tag tag-accent">人気</span>' : "") +
         "<b>" + yen(it.price) + "</b></div>";
     }).join("");
   }
+  // 同じ値段の品をまとめて1行にする（例: イチゴ・カンロ・レモン・メロン ¥300）
+  // 品名は区切り（「・」など）の位置でだけ折り返し、名前の途中では改行しない
+  function groupedRows(items, sep) {
+    var groups = [];
+    (items || []).forEach(function (it) {
+      var g = groups.filter(function (x) { return x.price === it.price; })[0];
+      if (g) g.names.push(it.name);
+      else groups.push({ price: it.price, names: [it.name] });
+    });
+    return groups.map(function (g) {
+      var names = g.names.map(function (n, idx) {
+        var last = idx === g.names.length - 1;
+        return '<span class="flavor">' + esc(n) + (last ? "" : esc(sep)) + "</span>";
+      }).join("<wbr>");
+      return '<div class="row group"><span class="name">' + names + "</span>" +
+        "<b>" + yen(g.price) + "</b></div>";
+    }).join("");
+  }
+  function menuRows(m) {
+    return m.groupSamePrice ? groupedRows(m.items, m.separator || "・") : rows(m.items);
+  }
   function card(m, extraClass) {
     if (!m) return "";
     return '<div class="card' + (extraClass ? " " + extraClass : "") + '">' +
-      "<h3>" + title(m.title) + "</h3>" + rows(m.items) + "</div>";
+      "<h3>" + title(m.title) + "</h3>" + menuRows(m) + "</div>";
   }
   function set(id, html) {
     var el = document.getElementById(id);
@@ -65,7 +99,21 @@
 
   // ---- お店の名前・電話・地図 ----
   document.title = s.name || document.title;
-  set("brand", esc(s.name));
+  // 上のタブの左：看板の写真（logo）があれば写真、なければ店名の文字
+  if (s.logo) {
+    // showNameWithLogo が true なら、写真の右に店名の文字も並べる
+    var withName = s.showNameWithLogo !== false;
+    set("brand", '<img class="brand-logo" src="' + esc(s.logo) + '" alt="' + (withName ? "" : esc(s.name)) + '">' +
+      (withName ? '<span class="brand-name">' + esc(s.name) + "</span>" : ""));
+    var brandEl = document.getElementById("brand");
+    if (brandEl) {
+      brandEl.classList.add("has-logo");
+      if (typeof s.logoWidth === "number") brandEl.style.setProperty("--logo-width", s.logoWidth + "vw");
+      if (typeof s.logoMinWidth === "number") brandEl.style.setProperty("--logo-min", s.logoMinWidth + "px");
+    }
+  } else {
+    set("brand", esc(s.name));
+  }
   set("footer", "© " + esc(s.name));
   document.querySelectorAll("[data-tel-text]").forEach(function (el) {
     el.textContent = s.tel;
@@ -113,7 +161,7 @@
     ice = '<div class="card ice"><div class="ice-head"><h3>' + title(k.title) + "</h3>" +
       '<div class="ice-title">' + (k.badge ? '<span class="tag tag-ice">' + esc(k.badge) + "</span>" : "") +
       (flag ? flag.innerHTML : "") + "</div></div>" +
-      rows(k.items) +
+      menuRows(k) +
       (k.note ? '<p class="ice-note">' + rich(k.note) + "</p>" : "") + "</div>";
   }
 
@@ -134,15 +182,23 @@
     notesEl.style.display = (d.notes || []).length ? "" : "none";
   }
 
+  // ---- 営業時間・定休日 ----
+  var hours = s.hours || [];
+  set("hours-list", hours.map(function (h) {
+    return '<div class="hours-row"><span class="hours-label">' + esc(h.label) + "</span>" +
+      '<span class="hours-value">' + esc(h.value) + "</span></div>";
+  }).join(""));
+  var hoursEl = document.getElementById("hours");
+  if (hoursEl) hoursEl.style.display = hours.length ? "" : "none";
+
   // ---- 店舗・アクセス ----
-  set("access-holiday", esc(s.holiday));
   set("access-address", esc(s.address));
 
   // ---- 欄が狭いとき、文字を欄の幅に合わせて小さくする ----
   // 対象: お店紹介の見出し・文章、看板メニューの文章、お献立の見出し・品名と値段・注意書き
   // いちばん小さくて textMinSize（content.js）まで。それでも入らないときだけ折り返す。
   var MIN = typeof d.textMinSize === "number" ? d.textMinSize : 12;
-  var fitTargets = "#intro-title, #hero-title, #intro-text, #hero-text, .menu .card > h3, .menu .row, .notes li";
+  var fitTargets = "#intro-title, #hero-title, #intro-text, #hero-text, .menu .card > h3, .menu .row, .notes li, .hours-row";
   document.querySelectorAll(fitTargets).forEach(function (el) {
     el.classList.add("fit");
   });
@@ -219,6 +275,15 @@
       fitText();
     });
   }
+  // 上のタブの高さを測り、「お献立」などのリンクで飛んだとき見出しがタブに隠れないようにする
+  function measureNav() {
+    var nav = document.querySelector(".nav");
+    if (nav) document.documentElement.style.setProperty("--nav-h", nav.offsetHeight + "px");
+  }
+  measureNav();
+  window.addEventListener("resize", measureNav);
+  window.addEventListener("load", measureNav);
+
   fitText();
   window.addEventListener("resize", fitLater);
   window.addEventListener("load", fitLater);

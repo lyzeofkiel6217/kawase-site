@@ -7,6 +7,7 @@
 - `render.js` … `content.js` の内容を `index.html` の枠にはめ込むプログラム
 - `storefront.jpg` … 店舗外観の写真
 - `deluxe.png` … 看板メニュー「デラックス」の写真
+- `sign.png` … 上のタブ（スクロールしても上に残る帯）に出す看板の写真
 
 ## 内容の変え方
 
